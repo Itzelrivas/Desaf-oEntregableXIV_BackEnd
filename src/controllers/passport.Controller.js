@@ -9,34 +9,50 @@ import { verifyEmailService } from '../services/users.Service.js';
 initializePassport()
 
 //Registro de usuario con passport
-export const registerUser = (req, res, next) => {
+export const registerUser = async (req, res, next) => {
     const { first_name, last_name, email, age, password, role } = req.body; //agregue role
+    console.log(req.body)
     // Verificar si los campos no están completos para manejar el error
     if (!first_name || !last_name || !email || !age || !password) {
-        CustomError.createError({
+        console.log("2")
+        const error = CustomError.createError({
             name: "User Register Error",
             cause: registerUserErrorInfoESP({ first_name, last_name, email, age, password }),
-            message: "error tratando de registrar un nuevo usuario",
+            message: "Error tratando de registrar un nuevo usuario",
             code: NErrors.INVALID_TYPES_ERROR
         });
+        return next(error); // Pasar el error al siguiente middleware de error
     }
-
-    passport.authenticate('register', { 
-        failureRedirect: '/api/sessions/fail-register' 
-    })(req, res, next); 
-
-    let verifyEmail = verifyEmailService(email)
+    console.log("3")
+    // Verificar si el correo electrónico ya está registrado
+    const verifyEmail = await verifyEmailService(email);
     console.log(verifyEmail)
-    //request.logger.debug(verifyEmail)
-    if(verifyEmail === null){
-        request.logger.error("Error al registrar nuevo usuario.");
-        res.status(200).send({ status: 'noSuccess', message: "Usuario no creado porque el correo ya ha sido utilizado anteriormente :(" });
+
+    if (verifyEmail!==null) {
+        console.log("4")
+        req.logger.error("Error al registrar nuevo usuario.");
+        return res.status(409).send({ status: 'noSuccess', message: "Usuario no creado porque el correo ya ha sido utilizado anteriormente :(" });
     }
-    
-    console.log("Registrando nuevo usuario.");
-    //request.logger.info("Registrando nuevo usuario.")
-    res.status(200).send({ status: 'success', message: "Usuario creado de forma exitosa!!" });
+
+    passport.authenticate('register', (err, user) => {
+        console.log(err)
+        if (err) {
+            // Manejar cualquier error ocurrido durante la autenticación
+            req.logger.error("Error al registrar nuevo usuario:", err);
+            return next(err);
+        }
+        
+        // Si el usuario se registró correctamente, `user` contendrá el usuario creado
+        if (user) {
+            // Aquí puedes enviar la respuesta 200 con un mensaje de éxito
+            return res.status(200).send({ status: 'success', message: "Usuario creado de forma exitosa!!" });
+        } else {
+            // No se creó el usuario por alguna razón específica
+            return res.status(500).send({ status: 'error', message: "Error al intentar registrar un nuevo usuario." });
+        }
+    })(req, res, next); // Llamar a passport.authenticate como un middleware
 };
+
 
 //Login del usuario con passport
 export const loginUser = (request, response, next) => { 

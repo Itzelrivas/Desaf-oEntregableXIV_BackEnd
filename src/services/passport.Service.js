@@ -31,9 +31,11 @@ export const initializePassport = () => {
 					return done(null, false)
 				} else{
                     //Verificamos que exista el carrito asociado segun su id, en caso de tenerlo y si no se crea un nuevo carrito
-                    const cartId = request.body.cart;
+                    const cartId = cart//request.body.cart;
+                    console.log('aqui andamos:')
+                    console.log(cartId)
                     let idCart
-                    if(cartId.trim() !== ""){
+                    if(cartId !== undefined/*cartId.trim() !== ""*/){
                         const cart = await cartsModel.findOne({ id: cartId });
                         if (!cart) {
                             console.log("El carrito no existe!");

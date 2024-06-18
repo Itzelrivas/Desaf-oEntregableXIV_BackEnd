@@ -17,8 +17,12 @@ export const createCartService = async (cart) => {
             }
         } while (true);
         cart.id = idCart
-        await newCart(cart)
-        return cart
+        /*
+            await newCart(cart)
+            return cart
+        */
+        const cartNew = await newCart(cart)
+        return cartNew
     } catch (error) {
         console.error("Ha surgido este error en services de cart: " + error);
         return error;

@@ -276,8 +276,24 @@ export const newProductController = async (request, response) => {
         //console.log(currentRol)
 
         let products = await getProductsService()
-        const { title, description, code, price, stock, category, owner } = request.body;
-        if (!title || !description || !code || !price || !stock || !category) {
+        let { title, description, code, price, stock, category, owner } = request.body;
+
+        //chicle y pega
+        price = Number(price);
+        stock = Number(stock);
+
+        //if (!title || !description || !code || !price || !stock || !category) {
+            console.log(typeof title)
+            console.log(typeof description)
+            console.log(typeof code)
+            console.log(typeof price)
+            console.log(typeof stock)
+            console.log(typeof category)
+            console.log(typeof owner)
+
+        if(!title || !description || !code || !price || !stock || !category || typeof title !== "string" || typeof description !== "string" || typeof code !== "string" || typeof price !== "number" || typeof stock !== "number" || typeof category !== "string"){
+            console.log("hola1")
+
             if (request.files && request.files.length > 0) {
                 //Esto es para evitar que se guarden archivos si los parametros no estan completos
                 request.files.forEach(file => {
@@ -285,15 +301,28 @@ export const newProductController = async (request, response) => {
                 });
             }
             
+            //return response.status(400).send({ status: "error", msg: "¡Oh oh! No se han completado todos los campos requeridos." });
+
             //Manejamos errores
-            if (!title || !description || !code || !price || !stock || !category || typeof title !== "string" || typeof description !== "string" || typeof code !== "string" || typeof price !== "number" || typeof stock !== "number" || typeof category !== "string") {
+            //if (!title || !description || !code || !price || !stock || !category || typeof title !== "string" || typeof description !== "string" || typeof code !== "string" || typeof price !== "number" || typeof stock !== "number" || typeof category !== "string") {
+            /*CustomError.createError({
+                name: "Create New Product Error",
+                cause: createNewProductErrorInfoEsp(title, description, code, price, stock, category),
+                message: "Error al tratar de crear un nuevo producto porque no estan completos todos los campos requeridos.",
+                code: NErrors.INVALID_TYPES_ERROR
+            });*/
+            try {
                 CustomError.createError({
                     name: "Create New Product Error",
                     cause: createNewProductErrorInfoEsp(title, description, code, price, stock, category),
-                    message: "Error al tratar de crear un nuevo producto.",
+                    message: "Error al tratar de crear un nuevo producto porque no estan completos todos los campos requeridos.",
                     code: NErrors.INVALID_TYPES_ERROR
                 });
+            } catch (err) {
+                console.error("Error al crear el custom error:", err);
             }
+            //}
+            console.log("hola2")
 
             return response.status(400).send({ status: "error", msg: "¡Oh oh! No se han completado todos los campos requeridos." });
         }
@@ -370,9 +399,9 @@ export const updateProductController = async (request, response) => {
 export const deleteProductController = async (request, response) => {
     try {
         //prueba- No funciona
-        const currentRol=request.session.user.role
+        /*const currentRol=request.session.user.role
         console.log("Este es el role: ")
-        console.log(currentRol)
+        console.log(currentRol)*/
 
 		let products = await getProductsService()
 		let productId = parseInt(request.params.pid)
